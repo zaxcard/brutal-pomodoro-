@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRUTAL | 番茄鐘系統</title>
+    <style>
+        /* 粗野主義風格核心變數 */
+        :root {
+            --bg-color: #f0f0f0; /* 灰白底色 */
+            --main-color: #000000; /* 極致黑 */
+            --accent-color: #ff3300; /* 亮紅色，用於強調 */
+            --border-width: 4px;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--main-color);
+            /* 粗野主義標誌性的等寬字體 */
+            font-family: 'Courier New', Courier, monospace; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .brutal-container {
+            width: 100%;
+            max-width: 700px;
+            background-color: #ffffff;
+            border: var(--border-width) solid var(--main-color);
+            /* 粗獷的硬陰影 */
+            box-shadow: 12px 12px 0px var(--main-color);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 40px;
+            text-transform: uppercase;
+            margin: 0 0 20px 0;
+            border-bottom: var(--border-width) solid var(--main-color);
+            padding-bottom: 10px;
+            letter-spacing: -1px;
+            word-break: break-all;
+        }
+
+        /* 按鈕基本樣式 - 生硬、直接 */
+        button {
+            background-color: #ffffff;
+            color: var(--main-color);
+            border: var(--border-width) solid var(--main-color);
+            padding: 10px 15px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px var(--main-color);
+            transition: all 0.1s;
+        }
+
+        button:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px var(--main-color);
+        }
+
+        /* 模式選擇區塊 */
+        .mode-selectors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn.active {
+            background-color: var(--main-color);
+            color: #ffffff;
+        }
+
+        /* 巨大化的時間顯示 */
+        .time-display {
+            font-size: 120px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: -5px;
+            border: var(--border-width) solid var(--main-color);
+            background-color: #e6e6e6;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            line-height: 1;
+        }
+
+        /* 控制按鈕 */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        
+        .controls button {
+            flex: 1;
+            font-size: 24px;
+            padding: 15px;
+        }
+
+        #start-btn {
+            background-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        /* 紀錄表區塊 */
+        .log-section {
+            border-top: var(--border-width) solid var(--main-color);
+            padding-top: 20px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 15px;
+        }
+
+        .log-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        /* 統計數據 */
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            background-color: var(--main-color);
+            color: #ffffff;
+            padding: 10px;
+        }
+
+        .stat-item span {
+            color: var(--accent-color);
+        }
+
+        /* 粗獷表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            border: var(--border-width) solid var(--main-color);
+        }
+
+        th, td {
+            border: var(--border-width) solid var(--main-color);
+            padding: 12px;
+            text-align: left;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        th {
+            background-color: var(--main-color);
+            color: #ffffff;
+        }
+
+        td.type-work {
+            background-color: #e6e6e6;
+        }
+
+        td.type-break {
+            background-color: #ffffff;
+        }
+
+        /* 響應式調整 */
+        @media (max-width: 500px) {
+            .time-display { font-size: 80px; }
+            .stats { flex-direction: column; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brutal-container">
+        <h1>TIMER_OS v1.0</h1>
+
+        <div class="mode-selectors">
+            <!-- 加入了 25分與50分專注的選項 -->
+            <button class="mode-btn active" onclick="setMode('work25', this)">WORK [25]</button>
+            <button class="mode-btn" onclick="setMode('work50', this)">WORK [50]</button>
+            <button class="mode-btn" onclick="setMode('shortBreak', this)">BREAK [5]</button>
+            <button class="mode-btn" onclick="setMode('longBreak', this)">BREAK [15]</button>
+        </div>
+
+        <div class="time-display" id="time-display">25:00</div>
+
+        <div class="controls">
+            <button id="start-btn" onclick="toggleTimer()">START</button>
+            <button onclick="resetTimer()">RESET</button>
+        </div>
+
+        <div class="log-section">
+            <div class="log-header">
+                <h2>SYSTEM_LOG</h2>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">TOTAL WORK: <span id="total-work-time">0 MIN</span></div>
+                <div class="stat-item">TOTAL BREAK: <span id="total-break-time">0 MIN</span></div>
+            </div>
+
+            <table id="log-table">
+                <thead>
+                    <tr>
+                        <th>TYPE</th>
+                        <th>DURATION</th>
+                        <th>TIME</th>
+                    </tr>
+                </thead>
+                <tbody id="log-body">
+                    <!-- 日誌將動態插入這裡 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 設定不同模式的時間（以秒為單位）
+        const MODES = {
+            work25: 25 * 60,
+            work50: 50 * 60,
+            shortBreak: 5 * 60,
+            longBreak: 15 * 60
+        };
+
+        // 追蹤累積時間（分鐘）
+        let stats = {
+            work: 0,
+            break: 0
+        };
+
+        let currentMode = 'work25';
+        let timeLeft = MODES[currentMode];
+        let timerId = null;
+        let isRunning = false;
+
+        const timeDisplay = document.getElementById('time-display');
+        const startBtn = document.getElementById('start-btn');
+        const logBody = document.getElementById('log-body');
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const displayString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timeDisplay.textContent = displayString;
+            document.title = `[${displayString}] BRUTAL TIMER`; 
+        }
+
+        function setMode(mode, btnElement) {
+            if (isRunning) toggleTimer(); // 如果在運行中則暫停
+
+            currentMode = mode;
+            timeLeft = MODES[currentMode];
+            updateDisplay();
+
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
+        // 粗獷的嗶嗶聲
+        function playAlarm() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'square'; // 使用方波，聽起來更像電子儀器或警報，符合粗野主義
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                
+                // 斷續的警報聲
+                setTimeout(() => oscillator.stop(), 200);
+                setTimeout(() => playBeep(audioCtx), 400);
+                setTimeout(() => playBeep(audioCtx), 800);
+            } catch (e) {
+                console.log("Audio not supported.");
+            }
+        }
+        
+        function playBeep(ctx) {
+            const osc = ctx.createOscillator();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.connect(ctx.destination);
+            osc.start();
+            setTimeout(() => osc.stop(), 200);
+        }
+
+        // 將完成的區塊記錄到表格中
+        function recordSession() {
+            const isWork = currentMode.startsWith('work');
+            const typeText = isWork ? 'FOCUS' : 'REST';
+            const durationMins = MODES[currentMode] / 60;
+            
+            // 更新總計
+            if (isWork) {
+                stats.work += durationMins;
+                document.getElementById('total-work-time').textContent = `${stats.work} MIN`;
+            } else {
+                stats.break += durationMins;
+                document.getElementById('total-break-time').textContent = `${stats.break} MIN`;
+            }
+
+            // 建立新的表格列 (Row)
+            const tr = document.createElement('tr');
+            
+            // 取得現在時間 HH:MM
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            tr.innerHTML = `
+                <td class="${isWork ? 'type-work' : 'type-break'}">${typeText}</td>
+                <td>${durationMins} MIN</td>
+                <td>${timeString}</td>
+            `;
+            
+            // 將新紀錄插到最上面
+            logBody.insertBefore(tr, logBody.firstChild);
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timerId);
+                startBtn.textContent = 'START';
+                startBtn.style.backgroundColor = 'var(--main-color)';
+                isRunning = false;
+            } else {
+                startBtn.textContent = 'PAUSE';
+                startBtn.style.backgroundColor = 'var(--accent-color)';
+                isRunning = true;
+                
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+
+                    // 時間到的邏輯
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        isRunning = false;
+                        startBtn.textContent = 'START';
+                        startBtn.style.backgroundColor = 'var(--accent-color)';
+                        
+                        playAlarm();
+                        recordSession(); // 紀錄時間
+                        
+                        // 視覺閃爍特效
+                        document.body.style.backgroundColor = 'var(--accent-color)';
+                        setTimeout(() => document.body.style.backgroundColor = 'var(--bg-color)', 300);
+                        setTimeout(() => document.body.style.backgroundColor = 'var(--accent-color)', 600);
+                        setTimeout(() => document.body.style.backgroundColor = 'var(--bg-color)', 900);
+                        
+                        // 自動重置
+                        timeLeft = MODES[currentMode]; 
+                        updateDisplay();
+                    }
+                }, 1000); 
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            isRunning = false;
+            startBtn.textContent = 'START';
+            startBtn.style.backgroundColor = 'var(--accent-color)';
+            timeLeft = MODES[currentMode];
+            updateDisplay();
+        }
+
+        // 初始化顯示
+        updateDisplay();
+    </script>
+</body>
+</html>
